@@ -2,7 +2,5 @@ node_modules/
 credentials.json
 token.json
 package-lock.json
-package.json
 uploads/
 *.txt
-server.js

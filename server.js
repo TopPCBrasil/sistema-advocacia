@@ -7,6 +7,10 @@ const { google } = require("googleapis");
 const app = express();
 const PORT = 3000;
 
+// Permite que o frontend acesse o backend (CORS)
+const cors = require("cors");
+app.use(cors());
+
 // Configuração do Multer para upload de arquivos
 const upload = multer({ dest: "uploads/" });
 
@@ -98,9 +102,20 @@ app.post("/cadastrar", upload.single("pdf"), async (req, res) => {
         });
 
         let fileId = file.data.id;
+
+        // 🔹 Torna o arquivo público automaticamente
+        await drive.permissions.create({
+            fileId: fileId,
+            requestBody: {
+                role: "reader",
+                type: "anyone",
+            },
+        });
+
+        // 🔹 Link público corrigido para permitir download direto
         let fileLink = `https://drive.google.com/uc?id=${fileId}`;
 
-        console.log(`✅ Arquivo PDF salvo no Google Drive: ${fileLink}`);
+        console.log(`✅ Arquivo PDF salvo no Google Drive e agora é público: ${fileLink}`);
 
         // Adicionar os dados ao Google Sheets
         await sheets.spreadsheets.values.append({
@@ -119,6 +134,36 @@ app.post("/cadastrar", upload.single("pdf"), async (req, res) => {
     } catch (error) {
         console.error("❌ Erro ao cadastrar:", error);
         res.status(500).json({ message: "Erro ao cadastrar cliente." });
+    }
+});
+
+// 🔹 NOVA ROTA: Listar clientes do Google Sheets
+app.get("/clientes", async (req, res) => {
+    try {
+        const auth = await authorize();
+        const sheets = google.sheets({ version: "v4", auth });
+
+        const resposta = await sheets.spreadsheets.values.get({
+            spreadsheetId: SHEET_ID,
+            range: "Clientes!A:C", // Certifique-se de que o nome da aba está correto
+        });
+
+        const linhas = resposta.data.values;
+        if (!linhas || linhas.length === 0) {
+            return res.json([]);
+        }
+
+        // Converter os dados em um formato mais organizado
+        const clientes = linhas.slice(1).map((linha) => ({
+            id: linha[0],
+            nome: linha[1],
+            link: linha[2],
+        }));
+
+        res.json(clientes);
+    } catch (error) {
+        console.error("❌ Erro ao buscar clientes:", error);
+        res.status(500).json({ message: "Erro ao buscar clientes." });
     }
 });
 

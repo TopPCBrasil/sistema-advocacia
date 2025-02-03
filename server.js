@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const fs = require("fs");
-const readline = require("readline");  // Adicionado para permitir entrada no terminal
+const readline = require("readline");  
 const { google } = require("googleapis");
 
 const app = express();
@@ -15,8 +15,8 @@ app.use(cors());
 const upload = multer({ dest: "uploads/" });
 
 // IDs do Google Drive e Sheets (Substituir pelos IDs reais)
-const SHEET_ID = "1Zntsagb1tGZiHQW-WkN1ljqv3S6eRKVu5VzmrwH3wwM";  // ID da sua planilha do Google Sheets
-const FOLDER_ID = "1CfrzlbEFh4utjRfmBH63xtv9XSHbQhDZ";  // ID da pasta onde os PDFs serão salvos no Google Drive
+const SHEET_ID = "1Zntsagb1tGZiHQW-WkN1ljqv3S6eRKVu5VzmrwH3wwM";  
+const FOLDER_ID = "1CfrzlbEFh4utjRfmBH63xtv9XSHbQhDZ";  
 
 const CREDENTIALS_PATH = "./credentials.json";
 const TOKEN_PATH = "./token.json";
@@ -42,7 +42,6 @@ async function authorize() {
     console.log(authUrl);
     console.log("\n🔹 **Depois de permitir o acesso, copie o código gerado e cole aqui.**\n");
 
-    // Criar interface para entrada manual do código
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
@@ -103,6 +102,9 @@ app.post("/cadastrar", upload.single("pdf"), async (req, res) => {
 
         let fileId = file.data.id;
 
+        // 🔹 Aguarde um pouco para evitar problemas de permissão
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         // 🔹 Torna o arquivo público automaticamente
         await drive.permissions.create({
             fileId: fileId,
@@ -112,8 +114,8 @@ app.post("/cadastrar", upload.single("pdf"), async (req, res) => {
             },
         });
 
-        // 🔹 Link público corrigido para permitir download direto
-        let fileLink = `https://drive.google.com/uc?id=${fileId}`;
+        // 🔹 Link corrigido para permitir download direto do PDF
+        let fileLink = `https://drive.google.com/uc?export=download&id=${fileId}`;
 
         console.log(`✅ Arquivo PDF salvo no Google Drive e agora é público: ${fileLink}`);
 
@@ -145,7 +147,7 @@ app.get("/clientes", async (req, res) => {
 
         const resposta = await sheets.spreadsheets.values.get({
             spreadsheetId: SHEET_ID,
-            range: "Clientes!A:C", // Certifique-se de que o nome da aba está correto
+            range: "Clientes!A:C",
         });
 
         const linhas = resposta.data.values;

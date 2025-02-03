@@ -114,8 +114,9 @@ app.post("/cadastrar", upload.single("pdf"), async (req, res) => {
             },
         });
 
-        // 🔹 Link corrigido para permitir download direto do PDF
-        let fileLink = `https://drive.google.com/uc?export=download&id=${fileId}`;
+        // 🔹 Gerar o link de visualização correto do Google Drive
+        let fileLink = `https://drive.google.com/file/d/${fileId}/view?usp=sharing`;
+
 
         console.log(`✅ Arquivo PDF salvo no Google Drive e agora é público: ${fileLink}`);
 

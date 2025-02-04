@@ -13,7 +13,7 @@ document.getElementById("cadastro-form").addEventListener("submit", async (event
     formData.append("nome", nome);
     formData.append("pdf", pdfFile);
 
-    let response = await fetch("http://localhost:3000/cadastrar", {
+    let response = await fetch("https://sistema-advocacia.onrender.com/cadastrar", {
         method: "POST",
         body: formData,
     });
